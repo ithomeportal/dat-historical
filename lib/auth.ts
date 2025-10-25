@@ -92,7 +92,13 @@ export async function getSession(): Promise<User | null> {
 
   try {
     const verified = await jwtVerify(token, JWT_SECRET);
-    return verified.payload as User;
+    const payload = verified.payload;
+
+    // Validate payload has required fields
+    if (typeof payload.email === 'string' && typeof payload.name === 'string') {
+      return { email: payload.email, name: payload.name };
+    }
+    return null;
   } catch (error) {
     return null;
   }

@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify the code
-    const isValid = verifyCode(email, code);
+    const isValid = await verifyCode(email, code);
 
     if (!isValid) {
       return NextResponse.json(

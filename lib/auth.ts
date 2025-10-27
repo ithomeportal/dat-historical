@@ -1,5 +1,6 @@
 import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
+import pool from './db';
 
 const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || 'default-secret-key-change-me'
@@ -9,25 +10,6 @@ export interface User {
   email: string;
   name: string;
 }
-
-// In-memory store for verification codes (use Redis in production)
-interface VerificationCode {
-  code: string;
-  email: string;
-  expiresAt: number;
-}
-
-const verificationCodes = new Map<string, VerificationCode>();
-
-// Clean up expired codes every 5 minutes
-setInterval(() => {
-  const now = Date.now();
-  for (const [key, value] of verificationCodes.entries()) {
-    if (value.expiresAt < now) {
-      verificationCodes.delete(key);
-    }
-  }
-}, 5 * 60 * 1000);
 
 export function generateVerificationCode(): string {
   // Generate 10-digit code
@@ -39,29 +21,46 @@ export function isValidEmail(email: string): boolean {
   return email.endsWith(`@${allowedDomain}`);
 }
 
-export function storeVerificationCode(email: string, code: string): void {
-  const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
-  verificationCodes.set(email, { code, email, expiresAt });
+export async function storeVerificationCode(email: string, code: string): Promise<void> {
+  const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes from now
+
+  // Insert or update verification code for this email
+  await pool.query(
+    `INSERT INTO verification_codes (email, code, expires_at)
+     VALUES ($1, $2, $3)
+     ON CONFLICT (email)
+     DO UPDATE SET code = $2, expires_at = $3, created_at = CURRENT_TIMESTAMP`,
+    [email, code, expiresAt]
+  );
 }
 
-export function verifyCode(email: string, code: string): boolean {
-  const stored = verificationCodes.get(email);
+export async function verifyCode(email: string, code: string): Promise<boolean> {
+  // Get the verification code from database
+  const result = await pool.query(
+    'SELECT code, expires_at FROM verification_codes WHERE email = $1',
+    [email]
+  );
 
-  if (!stored) {
+  if (result.rows.length === 0) {
     return false;
   }
 
-  if (stored.expiresAt < Date.now()) {
-    verificationCodes.delete(email);
+  const stored = result.rows[0];
+
+  // Check if expired
+  if (new Date(stored.expires_at) < new Date()) {
+    // Delete expired code
+    await pool.query('DELETE FROM verification_codes WHERE email = $1', [email]);
     return false;
   }
 
+  // Check if code matches
   if (stored.code !== code) {
     return false;
   }
 
-  // Code is valid, remove it
-  verificationCodes.delete(email);
+  // Code is valid, remove it from database
+  await pool.query('DELETE FROM verification_codes WHERE email = $1', [email]);
   return true;
 }
 

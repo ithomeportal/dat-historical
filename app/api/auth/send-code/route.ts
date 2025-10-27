@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
 
     // Generate and store code
     const code = generateVerificationCode();
-    storeVerificationCode(email, code);
+    await storeVerificationCode(email, code);
 
     // Send email
     const result = await sendVerificationEmail(email, code);

@@ -41,13 +41,8 @@ export async function POST(request: NextRequest) {
     });
   } catch (error: any) {
     console.error('Send code error:', error);
-    console.error('Error details:', {
-      message: error.message,
-      stack: error.stack,
-      name: error.name
-    });
     return NextResponse.json(
-      { error: 'Failed to send verification code', details: error.message },
+      { error: 'Failed to send verification code' },
       { status: 500 }
     );
   }

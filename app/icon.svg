@@ -1,0 +1,19 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle with gradient -->
+  <circle cx="32" cy="32" r="32" fill="url(#gradient)"/>
+
+  <!-- Document/file icon -->
+  <path d="M20 16C20 14.8954 20.8954 14 22 14H36L44 22V46C44 47.1046 43.1046 48 42 48H22C20.8954 48 20 47.1046 20 46V16Z" fill="white"/>
+  <path d="M36 14V20C36 21.1046 36.8954 22 38 22H44" fill="#E0E7FF"/>
+
+  <!-- Text "DAT" -->
+  <text x="32" y="38" font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="bold" fill="#4F46E5" text-anchor="middle">DAT</text>
+
+  <!-- Gradient definition -->
+  <defs>
+    <linearGradient id="gradient" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#667EEA"/>
+      <stop offset="100%" stop-color="#764BA2"/>
+    </linearGradient>
+  </defs>
+</svg>

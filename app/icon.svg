@@ -1,19 +1,36 @@
 <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Background circle with gradient -->
-  <circle cx="32" cy="32" r="32" fill="url(#gradient)"/>
+  <!-- Background rounded square with gradient -->
+  <rect x="2" y="2" width="60" height="60" rx="12" fill="url(#gradient)"/>
 
-  <!-- Document/file icon -->
-  <path d="M20 16C20 14.8954 20.8954 14 22 14H36L44 22V46C44 47.1046 43.1046 48 42 48H22C20.8954 48 20 47.1046 20 46V16Z" fill="white"/>
-  <path d="M36 14V20C36 21.1046 36.8954 22 38 22H44" fill="#E0E7FF"/>
+  <!-- Left document (source file) -->
+  <path d="M12 18C12 16.3431 13.3431 15 15 15H24L28 19V38C28 39.6569 26.6569 41 25 41H15C13.3431 41 12 39.6569 12 38V18Z" fill="white" fill-opacity="0.95"/>
+  <path d="M24 15V18C24 18.5523 24.4477 19 25 19H28" fill="white" fill-opacity="0.7"/>
+  <!-- Lines on left document -->
+  <rect x="15" y="23" width="10" height="2" rx="1" fill="#667EEA"/>
+  <rect x="15" y="28" width="8" height="2" rx="1" fill="#667EEA" fill-opacity="0.6"/>
+  <rect x="15" y="33" width="10" height="2" rx="1" fill="#667EEA" fill-opacity="0.4"/>
 
-  <!-- Text "DAT" -->
-  <text x="32" y="38" font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="bold" fill="#4F46E5" text-anchor="middle">DAT</text>
+  <!-- Right document (destination/database) -->
+  <path d="M36 26C36 24.3431 37.3431 23 39 23H48L52 27V46C52 47.6569 50.6569 49 49 49H39C37.3431 49 36 47.6569 36 46V26Z" fill="white" fill-opacity="0.95"/>
+  <path d="M48 23V26C48 26.5523 48.4477 27 49 27H52" fill="white" fill-opacity="0.7"/>
+  <!-- Lines on right document -->
+  <rect x="39" y="31" width="10" height="2" rx="1" fill="#667EEA"/>
+  <rect x="39" y="36" width="8" height="2" rx="1" fill="#667EEA" fill-opacity="0.6"/>
+  <rect x="39" y="41" width="10" height="2" rx="1" fill="#667EEA" fill-opacity="0.4"/>
+
+  <!-- Transfer arrow (curved) -->
+  <path d="M30 28C30 28 33 28 35 30" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M33 27L35.5 30L32.5 32" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Second arrow going back (sync/transfer indicator) -->
+  <path d="M34 38C34 38 31 38 29 36" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M31 39L28.5 36L31.5 34" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
 
   <!-- Gradient definition -->
   <defs>
     <linearGradient id="gradient" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#667EEA"/>
-      <stop offset="100%" stop-color="#764BA2"/>
+      <stop offset="0%" stop-color="#3B82F6"/>
+      <stop offset="100%" stop-color="#8B5CF6"/>
     </linearGradient>
   </defs>
 </svg>

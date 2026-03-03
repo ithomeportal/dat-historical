@@ -3,6 +3,10 @@ import pool from '@/lib/db';
 import Papa from 'papaparse';
 
 export const dynamic = 'force-dynamic';
+export const maxDuration = 60;
+
+const BATCH_SIZE = 500;
+const COLUMNS_PER_ROW = 19;
 
 function extractDateFromFilename(filename: string): string | null {
   const match = filename.match(/(\d{4}-\d{2}-\d{2})/);
@@ -19,6 +23,51 @@ function cleanInteger(value: any): number | null {
   if (!value || value === '') return null;
   const num = parseInt(parseFloat(value).toString());
   return isNaN(num) ? null : num;
+}
+
+function buildBatchInsert(rows: any[], filename: string, fileDate: string | null): { text: string; values: any[] } {
+  const values: any[] = [];
+  const valuePlaceholders: string[] = [];
+
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i];
+    const offset = i * COLUMNS_PER_ROW;
+    const placeholders = Array.from({ length: COLUMNS_PER_ROW }, (_, j) => `$${offset + j + 1}`);
+    valuePlaceholders.push(`(${placeholders.join(', ')})`);
+
+    values.push(
+      row['Name'] || null,
+      row['Origin City'] || null,
+      row['Origin State'] || null,
+      row['Origin Postal Code'] || null,
+      row['Destination City'] || null,
+      row['Destination State'] || null,
+      row['Destination Postal Code'] || null,
+      cleanNumeric(row['Distance(MI)']),
+      row['Equipment'] || null,
+      cleanInteger(row['Volume: Committed']),
+      cleanInteger(row['Volume: Total']),
+      cleanNumeric(row['Fuel']),
+      cleanNumeric(row['Target Buy/Mile']),
+      cleanNumeric(row['Target Buy/Trip']),
+      cleanNumeric(row['Target Sell/Mile']),
+      cleanNumeric(row['Target Sell/Trip']),
+      row['Status'] || null,
+      filename,
+      fileDate,
+    );
+  }
+
+  const text = `INSERT INTO main_historical (
+    name, origin_city, origin_state, origin_postal_code,
+    destination_city, destination_state, destination_postal_code,
+    distance_mi, equipment, volume_committed, volume_total,
+    fuel, target_buy_per_mile, target_buy_per_trip,
+    target_sell_per_mile, target_sell_per_trip, status,
+    source_filename, file_date
+  ) VALUES ${valuePlaceholders.join(', ')}`;
+
+  return { text, values };
 }
 
 export async function POST(request: NextRequest) {
@@ -58,7 +107,6 @@ export async function POST(request: NextRequest) {
     });
 
     const rows = parseResult.data.filter((row: any) => {
-      // Filter out empty rows
       return Object.values(row).some(val => val !== '');
     });
 
@@ -71,39 +119,11 @@ export async function POST(request: NextRequest) {
     try {
       await client.query('BEGIN');
 
-      // Insert rows into main_historical
-      for (const row of rows) {
-        await client.query(
-          `INSERT INTO main_historical (
-            name, origin_city, origin_state, origin_postal_code,
-            destination_city, destination_state, destination_postal_code,
-            distance_mi, equipment, volume_committed, volume_total,
-            fuel, target_buy_per_mile, target_buy_per_trip,
-            target_sell_per_mile, target_sell_per_trip, status,
-            source_filename, file_date
-          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)`,
-          [
-            row['Name'] || null,
-            row['Origin City'] || null,
-            row['Origin State'] || null,
-            row['Origin Postal Code'] || null,
-            row['Destination City'] || null,
-            row['Destination State'] || null,
-            row['Destination Postal Code'] || null,
-            cleanNumeric(row['Distance(MI)']),
-            row['Equipment'] || null,
-            cleanInteger(row['Volume: Committed']),
-            cleanInteger(row['Volume: Total']),
-            cleanNumeric(row['Fuel']),
-            cleanNumeric(row['Target Buy/Mile']),
-            cleanNumeric(row['Target Buy/Trip']),
-            cleanNumeric(row['Target Sell/Mile']),
-            cleanNumeric(row['Target Sell/Trip']),
-            row['Status'] || null,
-            filename,
-            fileDate,
-          ]
-        );
+      // Insert rows in batches for performance
+      for (let i = 0; i < rows.length; i += BATCH_SIZE) {
+        const batch = rows.slice(i, i + BATCH_SIZE);
+        const query = buildBatchInsert(batch, filename, fileDate);
+        await client.query(query.text, query.values);
       }
 
       // Mark file as uploaded
